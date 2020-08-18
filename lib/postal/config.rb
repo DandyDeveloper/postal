@@ -28,6 +28,7 @@ module Postal
     @config ||= begin
       require 'hashie/mash'
       config = Hashie::Mash.new(self.defaults)
+      
       config.deep_merge(self.yaml_config)
     end
   end
@@ -56,8 +57,36 @@ module Postal
     end
   end
 
+  def self.config_name
+    @config_name ||= begin
+      if ENV['POSTAL_CONFIG_FILENAME']
+        ENV['POSTAL_CONFIG_FILENAME']
+      else
+        "postal.yml"
+      end
+    end
+  end
+
+  def self.config_file
+    @config_file ||= begin
+      if ENV['POSTAL_CONFIG_FILE']
+        Pathname.new(ENV['POSTAL_CONFIG_FILE'])
+      else
+        nil
+      end
+    end
+  end
+
   def self.config_file_path
-    @config_file_path ||= File.join(config_root, 'postal.yml')
+    @config_file_path ||= begin
+      if not config_file.nil?
+        puts("Loading Postal config from directory defined in environment.")
+        File.join(config_file)
+      else
+        puts("Loading Postal config from standard Postal directory.")
+        File.join(config_root, config_name)
+      end
+    end
   end
 
   def self.yaml_config
